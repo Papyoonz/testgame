@@ -1,34 +1,115 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Basit Oyun</title>
+    <title>Top Sektirme Oyunu</title>
     <style>
         body {
-            text-align: center;
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #2c3e50;
             font-family: Arial, sans-serif;
         }
         #game {
-            font-size: 48px;
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background-color: #ecf0f1;
+            overflow: hidden;
+        }
+        #header {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #34495e;
+            color: white;
+            font-size: 20px;
+        }
+        #ball {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: url('https://upload.wikimedia.org/wikipedia/commons/7/7a/Basketball.png') no-repeat center center;
+            background-size: contain;
+            border-radius: 50%;
             cursor: pointer;
         }
-        #score {
+        #timer {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            text-align: center;
+            font-size: 30px;
+            color: #34495e;
+        }
+        #score-board {
             font-size: 24px;
+            color: #2c3e50;
+            text-align: center;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <div id="game">0</div>
-    <div id="score">Skor: 0</div>
+    <div id="game">
+        <div id="header">
+            <div id="username">Kullanıcı: player1</div>
+            <div id="score">Skor: 0</div>
+        </div>
+        <div id="ball"></div>
+        <div id="timer">60</div>
+    </div>
 
     <script>
-        let score = 0;
-        const gameElement = document.getElementById('game');
+        const ball = document.getElementById('ball');
+        const game = document.getElementById('game');
         const scoreElement = document.getElementById('score');
+        const timerElement = document.getElementById('timer');
 
-        gameElement.addEventListener('click', () => {
+        let ballX = game.clientWidth / 2 - 25;
+        let ballY = game.clientHeight / 2 - 25;
+        let score = 0;
+        let timeLeft = 60;
+        let timerInterval;
+
+        ball.style.left = ballX + 'px';
+        ball.style.top = ballY + 'px';
+
+        ball.addEventListener('click', () => {
             score++;
             scoreElement.textContent = 'Skor: ' + score;
+            ball.style.width = ball.clientWidth + 5 + 'px';
+            ball.style.height = ball.clientHeight + 5 + 'px';
+            setTimeout(() => {
+                ball.style.width = ball.clientWidth - 5 + 'px';
+                ball.style.height = ball.clientHeight - 5 + 'px';
+            }, 200);
         });
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    gameOver();
+                }
+            }, 1000);
+        }
+
+        function gameOver() {
+            alert('Oyun bitti! Skorunuz: ' + score);
+            location.reload(); // Oyunu yeniden başlatmak için sayfayı yeniler
+        }
+
+        startTimer();
     </script>
 </body>
 </html>
+

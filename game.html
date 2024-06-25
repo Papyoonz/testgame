@@ -3,6 +3,8 @@
 <head>
     <title>Top Sektirme Oyunu</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@700&display=swap');
+        
         body {
             margin: 0;
             overflow: hidden;
@@ -10,8 +12,8 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #2c3e50;
-            font-family: Arial, sans-serif;
+            background-color: #1e272e;
+            font-family: 'Comic Neue', cursive;
         }
         #game {
             position: relative;
@@ -27,18 +29,29 @@
             width: 100%;
             display: flex;
             justify-content: space-between;
+            align-items: center;
             padding: 10px;
             background-color: #34495e;
             color: white;
             font-size: 20px;
+        }
+        #header:after {
+            content: '';
+            display: block;
+            width: 100%;
+            height: 5px;
+            background-color: #f39c12;
+            position: absolute;
+            bottom: -5px;
+            left: 0;
         }
         #score {
             margin-right: 20px;
         }
         #ball {
             position: absolute;
-            width: 50px;
-            height: 50px;
+            width: 150px; /* Updated size to cover 1/6 of the screen */
+            height: 150px; /* Updated size to cover 1/6 of the screen */
             background: url('https://upload.wikimedia.org/wikipedia/commons/7/7a/Basketball.png') no-repeat center center;
             background-size: contain;
             border-radius: 50%;
@@ -50,18 +63,28 @@
             width: 100%;
             text-align: center;
             font-size: 30px;
-            color: #34495e;
+            color: #f39c12;
+        }
+        #confetti {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: none;
         }
     </style>
 </head>
 <body>
     <div id="game">
         <div id="header">
-            <div id="username">Kullanıcı: </div>
+            <div id="username">Kullanıcı: player1</div>
             <div id="score">Skor: 0</div>
         </div>
         <div id="ball"></div>
-        <div id="timer">60</div>
+        <div id="timer">01:00</div>
+        <canvas id="confetti"></canvas>
     </div>
 
     <script>
@@ -70,6 +93,11 @@
         const scoreElement = document.getElementById('score');
         const timerElement = document.getElementById('timer');
         const usernameElement = document.getElementById('username');
+        const confettiCanvas = document.getElementById('confetti');
+        const confettiCtx = confettiCanvas.getContext('2d');
+
+        confettiCanvas.width = game.clientWidth;
+        confettiCanvas.height = game.clientHeight;
 
         // Telegram Bot API üzerinden kullanıcı adını almak
         // Bunu bot entegrasyonu sırasında dinamik olarak almak için kullanıcı adı değişkenini kullanacağız
@@ -78,8 +106,8 @@
 
         usernameElement.textContent = 'Kullanıcı: ' + telegramUsername;
 
-        let ballX = game.clientWidth / 2 - 25;
-        let ballY = game.clientHeight / 2 - 25;
+        let ballX = game.clientWidth / 2 - 75;  // Updated to center the ball
+        let ballY = game.clientHeight / 2 - 75; // Updated to center the ball
         let score = 0;
         let timeLeft = 60;
         let timerInterval;
@@ -90,18 +118,20 @@
         ball.addEventListener('click', () => {
             score++;
             scoreElement.textContent = 'Skor: ' + score;
-            ball.style.width = ball.clientWidth + 5 + 'px';
-            ball.style.height = ball.clientHeight + 5 + 'px';
+            ball.style.width = ball.clientWidth + 15 + 'px';
+            ball.style.height = ball.clientHeight + 15 + 'px';
             setTimeout(() => {
-                ball.style.width = ball.clientWidth - 5 + 'px';
-                ball.style.height = ball.clientHeight - 5 + 'px';
+                ball.style.width = ball.clientWidth - 15 + 'px';
+                ball.style.height = ball.clientHeight - 15 + 'px';
             }, 200);
         });
 
         function startTimer() {
             timerInterval = setInterval(() => {
                 timeLeft--;
-                timerElement.textContent = timeLeft;
+                const minutes = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+                const seconds = String(timeLeft % 60).padStart(2, '0');
+                timerElement.textContent = `${minutes}:${seconds}`;
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
                     gameOver();
@@ -110,8 +140,59 @@
         }
 
         function gameOver() {
-            alert('Oyun bitti! Skorunuz: ' + score);
-            location.reload(); // Oyunu yeniden başlatmak için sayfayı yeniler
+            showConfetti();
+            setTimeout(() => {
+                alert('Oyun bitti! Skorunuz: ' + score);
+                location.reload(); // Oyunu yeniden başlatmak için sayfayı yeniler
+            }, 2000);
+        }
+
+        function showConfetti() {
+            confettiCanvas.style.display = 'block';
+            const confettiCount = 300;
+            const confetti = [];
+
+            for (let i = 0; i < confettiCount; i++) {
+                confetti.push({
+                    x: Math.random() * confettiCanvas.width,
+                    y: Math.random() * confettiCanvas.height - confettiCanvas.height,
+                    r: Math.random() * 6 + 2,
+                    d: Math.random() * confettiCount,
+                    color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+                    tilt: Math.random() * 30,
+                    tiltAngleIncremental: Math.random() * 0.07 + 0.05,
+                    tiltAngle: 0
+                });
+            }
+
+            function drawConfetti() {
+                confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+                confetti.forEach((c, i) => {
+                    c.tiltAngle += c.tiltAngleIncremental;
+                    c.y += (Math.cos(c.d) + 3 + c.r / 2) / 2;
+                    c.x += Math.sin(c.d);
+                    c.tilt = Math.sin(c.tiltAngle - i / 3) * 15;
+
+                    if (c.y > confettiCanvas.height) {
+                        confetti[i] = {
+                            ...c,
+                            x: Math.random() * confettiCanvas.width,
+                            y: -10
+                        };
+                    }
+
+                    confettiCtx.beginPath();
+                    confettiCtx.lineWidth = c.r;
+                    confettiCtx.strokeStyle = c.color;
+                    confettiCtx.moveTo(c.x + c.tilt + c.r / 4, c.y);
+                    confettiCtx.lineTo(c.x + c.tilt, c.y + c.tilt + c.r / 4);
+                    confettiCtx.stroke();
+                });
+
+                requestAnimationFrame(drawConfetti);
+            }
+
+            drawConfetti();
         }
 
         startTimer();
